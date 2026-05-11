@@ -17,6 +17,10 @@
             padding: 10px;
             margin-bottom: 10px;
         }
+        .sistema {
+            color: gray;
+            font-style: italic;
+        }
         input {
             width: 70%;
             padding: 8px;
@@ -28,7 +32,7 @@
 </head>
 <body>
     <h1>Chat en Tiempo Real</h1>
-
+    <p id="info"></p>
     <div id="mensajes"></div>
 
     <input type="text" id="mensaje" placeholder="Escribe un mensaje..."/>
@@ -38,12 +42,24 @@
         const username = prompt("¿Cuál es tu nombre?") || "anonimo";
         const room = prompt("¿A qué sala quieres entrar?") || "general";
 
+        document.getElementById("info").textContent = `Sala: ${room} — Usuario: ${username}`;
+
         const ws = new WebSocket(`ws://localhost:8080/ws?username=${username}&room=${room}`);
+
+        ws.onerror = function() {
+            alert("Ese nombre ya está en uso en esta sala. Recarga y elige otro.");
+        };
 
         ws.onmessage = function(event) {
             const msg = JSON.parse(event.data);
             const div = document.getElementById("mensajes");
-            div.innerHTML += `<p><b>${msg.username}:</b> ${msg.content}</p>`;
+
+            if (msg.type === "join" || msg.type === "leave") {
+                div.innerHTML += `<p class="sistema">${msg.content}</p>`;
+            } else {
+                div.innerHTML += `<p><b>${msg.username}:</b> ${msg.content}</p>`;
+            }
+
             div.scrollTop = div.scrollHeight;
         };
 

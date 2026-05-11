@@ -14,13 +14,17 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-// ServeWS maneja la conexión WebSocket
 func ServeWS(h *hub.Hub, w http.ResponseWriter, r *http.Request) {
 	username := r.URL.Query().Get("username")
 	room := r.URL.Query().Get("room")
 
 	if username == "" || room == "" {
 		http.Error(w, "username y room son requeridos", http.StatusBadRequest)
+		return
+	}
+
+	if h.UsernameExiste(username, room) {
+		http.Error(w, "ese nombre ya está en uso en esta sala", http.StatusConflict)
 		return
 	}
 
@@ -38,8 +42,7 @@ func ServeWS(h *hub.Hub, w http.ResponseWriter, r *http.Request) {
 		Room:     room,
 	}
 
-	h.Register <- client
-
 	go client.WritePump()
+	h.Register <- client
 	go client.ReadPump()
 }
