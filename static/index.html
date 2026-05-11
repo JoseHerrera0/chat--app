@@ -35,9 +35,33 @@
     <button onclick="enviar()">Enviar</button>
 
     <script>
+        const username = prompt("¿Cuál es tu nombre?") || "anonimo";
+        const room = prompt("¿A qué sala quieres entrar?") || "general";
+
+        const ws = new WebSocket(`ws://localhost:8080/ws?username=${username}&room=${room}`);
+
+        ws.onmessage = function(event) {
+            const msg = JSON.parse(event.data);
+            const div = document.getElementById("mensajes");
+            div.innerHTML += `<p><b>${msg.username}:</b> ${msg.content}</p>`;
+            div.scrollTop = div.scrollHeight;
+        };
+
         function enviar() {
-            alert("¡Próximamente conectado con WebSocket!");
+            const input = document.getElementById("mensaje");
+            if (input.value === "") return;
+
+            ws.send(JSON.stringify({
+                type: "chat",
+                content: input.value
+            }));
+
+            input.value = "";
         }
+
+        document.getElementById("mensaje").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") enviar();
+        });
     </script>
 </body>
 </html>
